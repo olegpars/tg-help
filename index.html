@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<style>*,*::before,*::after{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>Запасной VPN для Телеграма</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: одна узкая колонка для чтения с телефона, крупный шрифт, переключатель «Android / iPhone / Компьютер», карточки только у вариантов VPN */
+:root {
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --ink: #17202c;
+  --muted: #536173;
+  --line: #d9e1ec;
+  --accent: #1a73c4;
+  --accent-soft: #e3effa;
+  --ok: #1e7a4c;
+  --ok-soft: #e4f4ea;
+  --warn: #9a5a00;
+  --warn-soft: #fdf1dc;
+  --font: "Golos Text", "Segoe UI", Roboto, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11161d; --surface: #19212b; --ink: #e8eef5; --muted: #9aa8b8; --line: #2b3643;
+    --accent: #6cb4f5; --accent-soft: #1b2e42; --ok: #6fd39d; --ok-soft: #173025;
+    --warn: #f2b85c; --warn-soft: #33270f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11161d; --surface: #19212b; --ink: #e8eef5; --muted: #9aa8b8; --line: #2b3643;
+  --accent: #6cb4f5; --accent-soft: #1b2e42; --ok: #6fd39d; --ok-soft: #173025;
+  --warn: #f2b85c; --warn-soft: #33270f; color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font); font-size: 18px; line-height: 1.55;
+}
+.wrap {
+  max-width: 640px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+  display: flex; flex-direction: column; gap: 32px;
+}
+h1, h2, h3 { text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: 1.85rem; font-weight: 700; }
+h2 { font-size: 1.35rem; font-weight: 700; }
+h3 { font-size: 1.2rem; font-weight: 700; }
+p { margin: 0; }
+section, .panel { display: flex; flex-direction: column; gap: 14px; }
+.panel { gap: 20px; }
+.lead { color: var(--muted); font-size: 1.05rem; }
+ul, ol { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 8px; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.note { border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+.note.ok { background: var(--ok-soft); }
+.note.ok h2 { color: var(--ok); }
+.note.warn { background: var(--warn-soft); }
+.note.warn h2, .note.warn h3 { color: var(--warn); }
+.note.blue { background: var(--accent-soft); }
+
+.tabs {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 6px;
+}
+.tab {
+  font: inherit; font-weight: 600; font-size: 1rem; cursor: pointer;
+  border: 0; border-radius: 10px; padding: 12px 6px; min-height: 48px;
+  background: transparent; color: var(--ink);
+}
+.tab[aria-selected="true"] { background: var(--accent); color: var(--surface); }
+.hint { font-size: 0.95rem; color: var(--muted); }
+
+.option {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  padding: 18px; display: flex; flex-direction: column; gap: 12px;
+}
+.option-head { display: flex; align-items: baseline; gap: 12px; }
+.num {
+  flex: none; width: 34px; height: 34px; border-radius: 50%;
+  background: var(--accent); color: var(--surface);
+  display: grid; place-items: center; font-weight: 700; font-size: 1rem;
+}
+.facts { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font-size: 0.85rem; padding: 3px 10px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--ink);
+}
+.label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+.steps { padding-left: 1.4em; }
+
+a.store {
+  display: inline-flex; align-items: center; justify-content: center; align-self: flex-start;
+  min-height: 48px; padding: 10px 18px; border-radius: 10px;
+  background: var(--accent); color: var(--surface); font-weight: 600; text-decoration: none;
+}
+.copyrow {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px;
+}
+.copyrow code {
+  font-family: var(--font); font-weight: 600; font-size: 1.05rem;
+  flex: 1 1 180px; min-width: 0; overflow-wrap: anywhere; user-select: all;
+}
+button.copy {
+  font: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+  background: var(--surface); color: var(--accent); border: 1px solid var(--accent); border-radius: 8px;
+  padding: 8px 14px; min-height: 40px;
+}
+.fields { display: flex; flex-direction: column; gap: 6px; }
+.proxy .store { width: 100%; }
+.template {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px 16px; white-space: pre-wrap; user-select: all;
+}
+.small { font-size: 0.9rem; color: var(--muted); }
+details { border-top: 1px solid var(--line); padding-top: 14px; }
+summary { cursor: pointer; font-weight: 600; color: var(--muted); }
+details ul { margin-top: 10px; font-size: 0.9rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+
+<main class="wrap">
+
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <h1>Как снова написать в Телеграм, пока VPN не работает</h1>
+    <p class="lead">Мама, есть два способа снова открыть Телеграм и написать в поддержку своего VPN. Сначала попробуй первый — прокси: ничего ставить не нужно. Если не получится, переходи ко второму — бесплатному VPN.</p>
+  </header>
+
+  <section class="note blue">
+    <h2>Самый простой путь</h2>
+    <p>Пришли мне название своего VPN и почту или номер телефона, на которые он оформлен. Я напишу в их поддержку сам, у меня Телеграм работает. Тогда ничего ставить не нужно.</p>
+  </section>
+
+  <section class="note ok">
+    <h2>Как не навредить себе</h2>
+    <ul>
+      <li><b>Ставь только по кнопкам с этой страницы</b> или из официального магазина приложений.</li>
+      <li><b>Пока VPN включён, не заходи в банк</b> и не вводи пароли на сайтах.</li>
+      <li><b>Поговорила с поддержкой — выключи VPN.</b> Потом приложение можно удалить.</li>
+      <li>Сами сообщения в Телеграме зашифрованы, VPN их прочитать не может.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Способ 1. Прокси прямо в Телеграме</h2>
+    <p>Прокси — это настройка внутри самого Телеграма. Приложения ставить не нужно, работает на любом телефоне и на компьютере. Помогает только Телеграму, остальной интернет не трогает.</p>
+    <div class="label">Как подключить</div>
+    <ol class="steps">
+      <li>Нажми синюю кнопку «Подключить в Телеграме» у прокси 1 ниже.</li>
+      <li>Откроется Телеграм и покажет окно «Прокси-сервер». Нажми <b>«Подключить прокси»</b>.</li>
+      <li>Посмотри наверх, над списком чатов. Если там написано «Соединение…» дольше минуты — прокси не работает. Вернись на эту страницу и нажми кнопку у следующего прокси.</li>
+      <li>Когда чаты начали обновляться, а сверху появился значок щита — всё работает. Пиши в поддержку.</li>
+    </ol>
+    <p class="small">Наверху списка чатов может появиться чужой канал с пометкой «Спонсор прокси». Это реклама владельца прокси, не обращай внимания, после отключения прокси она пропадёт.</p>
+  </section>
+
+  <section class="panel">
+    <article class="option proxy">
+      <div class="option-head"><span class="num">1</span><h3>Прокси 1</h3></div>
+      <a class="store" href="tg://proxy?server=html.geo-cdn.ru&amp;port=443&amp;secret=ee79e344818749bd7ac519130220c25d09">Подключить в Телеграме</a>
+      <p class="small">Не открылось? Попробуй <a href="https://t.me/proxy?server=html.geo-cdn.ru&amp;port=443&amp;secret=ee79e344818749bd7ac519130220c25d09" target="_blank" rel="noopener">запасную ссылку</a> или введи вручную:</p>
+      <div class="fields">
+        <div class="label">Сервер</div>
+        <div class="copyrow"><code>html.geo-cdn.ru</code><button class="copy" type="button" data-copy="html.geo-cdn.ru">Скопировать</button></div>
+        <div class="label">Порт</div>
+        <div class="copyrow"><code>443</code><button class="copy" type="button" data-copy="443">Скопировать</button></div>
+        <div class="label">Ключ (Secret)</div>
+        <div class="copyrow"><code>ee79e344818749bd7ac519130220c25d09</code><button class="copy" type="button" data-copy="ee79e344818749bd7ac519130220c25d09">Скопировать</button></div>
+      </div>
+    </article>
+    <article class="option proxy">
+      <div class="option-head"><span class="num">2</span><h3>Прокси 2</h3></div>
+      <a class="store" href="tg://proxy?server=top.proxynet.tech&amp;port=443&amp;secret=ee59d1ef95ab03cfeaebb18b0a529ad5e6746f702e70726f78796e65742e74656368">Подключить в Телеграме</a>
+      <p class="small">Не открылось? Попробуй <a href="https://t.me/proxy?server=top.proxynet.tech&amp;port=443&amp;secret=ee59d1ef95ab03cfeaebb18b0a529ad5e6746f702e70726f78796e65742e74656368" target="_blank" rel="noopener">запасную ссылку</a> или введи вручную:</p>
+      <div class="fields">
+        <div class="label">Сервер</div>
+        <div class="copyrow"><code>top.proxynet.tech</code><button class="copy" type="button" data-copy="top.proxynet.tech">Скопировать</button></div>
+        <div class="label">Порт</div>
+        <div class="copyrow"><code>443</code><button class="copy" type="button" data-copy="443">Скопировать</button></div>
+        <div class="label">Ключ (Secret)</div>
+        <div class="copyrow"><code>ee59d1ef95ab03cfeaebb18b0a529ad5e6746f702e70726f78796e65742e74656368</code><button class="copy" type="button" data-copy="ee59d1ef95ab03cfeaebb18b0a529ad5e6746f702e70726f78796e65742e74656368">Скопировать</button></div>
+      </div>
+    </article>
+    <article class="option proxy">
+      <div class="option-head"><span class="num">3</span><h3>Прокси 3</h3></div>
+      <a class="store" href="tg://proxy?server=high.telehelp.top&amp;port=443&amp;secret=ee5b93eed4a729a5e53105623d8551dc3664726976652e676f6f676c652e636f6d">Подключить в Телеграме</a>
+      <p class="small">Не открылось? Попробуй <a href="https://t.me/proxy?server=high.telehelp.top&amp;port=443&amp;secret=ee5b93eed4a729a5e53105623d8551dc3664726976652e676f6f676c652e636f6d" target="_blank" rel="noopener">запасную ссылку</a> или введи вручную:</p>
+      <div class="fields">
+        <div class="label">Сервер</div>
+        <div class="copyrow"><code>high.telehelp.top</code><button class="copy" type="button" data-copy="high.telehelp.top">Скопировать</button></div>
+        <div class="label">Порт</div>
+        <div class="copyrow"><code>443</code><button class="copy" type="button" data-copy="443">Скопировать</button></div>
+        <div class="label">Ключ (Secret)</div>
+        <div class="copyrow"><code>ee5b93eed4a729a5e53105623d8551dc3664726976652e676f6f676c652e636f6d</code><button class="copy" type="button" data-copy="ee5b93eed4a729a5e53105623d8551dc3664726976652e676f6f676c652e636f6d">Скопировать</button></div>
+      </div>
+    </article>
+    <article class="option proxy">
+      <div class="option-head"><span class="num">4</span><h3>Прокси 4</h3></div>
+      <a class="store" href="tg://proxy?server=dl3.soft98.net&amp;port=2053&amp;secret=ee277b571aff100fbafc2e3efebac80b2b736f667439382e6972">Подключить в Телеграме</a>
+      <p class="small">Не открылось? Попробуй <a href="https://t.me/proxy?server=dl3.soft98.net&amp;port=2053&amp;secret=ee277b571aff100fbafc2e3efebac80b2b736f667439382e6972" target="_blank" rel="noopener">запасную ссылку</a> или введи вручную:</p>
+      <div class="fields">
+        <div class="label">Сервер</div>
+        <div class="copyrow"><code>dl3.soft98.net</code><button class="copy" type="button" data-copy="dl3.soft98.net">Скопировать</button></div>
+        <div class="label">Порт</div>
+        <div class="copyrow"><code>2053</code><button class="copy" type="button" data-copy="2053">Скопировать</button></div>
+        <div class="label">Ключ (Secret)</div>
+        <div class="copyrow"><code>ee277b571aff100fbafc2e3efebac80b2b736f667439382e6972</code><button class="copy" type="button" data-copy="ee277b571aff100fbafc2e3efebac80b2b736f667439382e6972">Скопировать</button></div>
+      </div>
+    </article>
+    <article class="option proxy">
+      <div class="option-head"><span class="num">5</span><h3>Прокси 5</h3></div>
+      <a class="store" href="tg://proxy?server=host.white-dns.info&amp;port=443&amp;secret=ee3e85aac6e7bcc0ba3847479bff8ef2a4">Подключить в Телеграме</a>
+      <p class="small">Не открылось? Попробуй <a href="https://t.me/proxy?server=host.white-dns.info&amp;port=443&amp;secret=ee3e85aac6e7bcc0ba3847479bff8ef2a4" target="_blank" rel="noopener">запасную ссылку</a> или введи вручную:</p>
+      <div class="fields">
+        <div class="label">Сервер</div>
+        <div class="copyrow"><code>host.white-dns.info</code><button class="copy" type="button" data-copy="host.white-dns.info">Скопировать</button></div>
+        <div class="label">Порт</div>
+        <div class="copyrow"><code>443</code><button class="copy" type="button" data-copy="443">Скопировать</button></div>
+        <div class="label">Ключ (Secret)</div>
+        <div class="copyrow"><code>ee3e85aac6e7bcc0ba3847479bff8ef2a4</code><button class="copy" type="button" data-copy="ee3e85aac6e7bcc0ba3847479bff8ef2a4">Скопировать</button></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="note blue">
+    <h3>Если кнопка не открывает Телеграм — введи прокси вручную</h3>
+    <p><b>Android:</b> Телеграм → три полоски слева вверху → «Настройки» → «Данные и память» → в самом низу «Настройки прокси» → «Добавить прокси» → выбери <b>MTProto</b> → вставь «Сервер», «Порт» и «Ключ» из карточки выше → галочка справа вверху.</p>
+    <p><b>iPhone:</b> Телеграм → «Настройки» внизу справа → «Данные и память» → «Прокси» → «Добавить прокси» → выбери <b>MTProto</b> → вставь «Сервер», «Порт» и «Ключ» → «Готово».</p>
+    <p><b>Компьютер:</b> Телеграм → «Настройки» → «Продвинутые настройки» → «Тип соединения» → «Использовать собственный прокси» → «Добавить прокси» → <b>MTProto</b> → вставь три поля → «Сохранить».</p>
+    <p>Чтобы скопировать, нажми «Скопировать» возле поля, потом в Телеграме подержи палец на пустом поле и выбери «Вставить».</p>
+  </section>
+
+  <section class="note ok">
+    <h3>Насколько это безопасно</h3>
+    <p>Эти прокси держат незнакомые люди, но переписку они прочитать не могут: Телеграм шифрует её сам. Владелец прокси видит только, что с твоего адреса кто-то пользуется Телеграмом. Для одного разговора с поддержкой это нормально.</p>
+    <p><b>Когда поговоришь, отключи прокси:</b> там же, где добавляла («Данные и память» → «Прокси»), выключи переключатель «Использовать прокси».</p>
+  </section>
+
+  <section class="note warn">
+    <h3>Если ни один прокси не работает</h3>
+    <p>Бесплатные прокси живут от нескольких часов до нескольких дней. Эти пять проверены 13 ноября 2026 года. Если все перестали работать, напиши мне по SMS или на почту — пришлю свежие. Или переходи к способу 2.</p>
+  </section>
+
+  <section>
+    <h2>Способ 2. Бесплатный VPN</h2>
+    <p>Если прокси не помогли, поставь бесплатный VPN. Выбери, на чём будешь это делать.</p>
+    <div class="tabs" role="tablist" aria-label="Устройство">
+      <button class="tab" type="button" role="tab" id="tab-android" aria-controls="android" aria-selected="true">Android</button>
+      <button class="tab" type="button" role="tab" id="tab-iphone" aria-controls="iphone" aria-selected="false">iPhone</button>
+      <button class="tab" type="button" role="tab" id="tab-computer" aria-controls="computer" aria-selected="false">Компьютер</button>
+    </div>
+    <p class="hint">Если на обороте телефона нарисовано яблоко — это iPhone. Все остальные телефоны (Samsung, Xiaomi, Honor и другие) — Android.</p>
+  </section>
+
+  <!-- ===================== ANDROID ===================== -->
+  <div class="panel" id="android" role="tabpanel" aria-labelledby="tab-android">
+    <p>На Android все четыре приложения есть в Google Play. Нажми зелёную кнопку, откроется Google Play, там нажми «Установить». Пробуй по порядку, пока какое-то не подключится.</p>
+
+    <article class="option">
+      <div class="option-head"><span class="num">1</span><h3>Proton VPN</h3></div>
+      <div class="facts"><span class="chip">бесплатно</span><span class="chip">без лимита</span><span class="chip">самый надёжный по репутации</span></div>
+      <p>Швейцарская компания, та же, что делает защищённую почту Proton. В России подключается не всегда, но попробовать стоит первым.</p>
+      <a class="store" href="https://play.google.com/store/apps/details?id=ch.protonvpn.android" target="_blank" rel="noopener">Открыть в Google Play</a>
+      <div class="label">Как включить</div>
+      <ol class="steps">
+        <li>Открой приложение, зарегистрируйся по своей почте, выбери бесплатный тариф (Free).</li>
+        <li>Открой настройки, найди пункт «Протокол» и выбери <b>Stealth</b>. Он лучше проходит через блокировки.</li>
+        <li>Нажми «Подключиться», разреши подключение VPN, когда телефон спросит, и открой Телеграм.</li>
+      </ol>
+    </article>
+
+    <article class="option">
+      <div class="option-head"><span class="num">2</span><h3>AmneziaVPN</h3></div>
+      <div class="facts"><span class="chip">бесплатно</span><span class="chip">сделан для России</span></div>
+      <p>Сделан специально для обхода блокировок в России и работает там лучше других. Бесплатная версия открывает только часть сайтов, поэтому Телеграм может и не заработать. Нужно пробовать.</p>
+      <a class="store" href="https://play.google.com/store/apps/details?id=org.amnezia.vpn" target="_blank" rel="noopener">Открыть в Google Play</a>
+      <div class="label">Как включить</div>
+      <ol class="steps">
+        <li>Открой приложение и нажми «➕».</li>
+        <li>Выбери «VPN от Amnezia», потом «Amnezia Free RU».</li>
+        <li>Нажми «Подключиться» и открой Телеграм.</li>
+      </ol>
+      <p class="small">Ключи Amnezia в Телеграме и в чатах не покупай: там много поддельных ботов.</p>
+    </article>
+
+    <article class="option">
+      <div class="option-head"><span class="num">3</span><h3>AdGuard VPN</h3></div>
+      <div class="facts"><span class="chip">бесплатно</span><span class="chip">около 3 ГБ в месяц</span></div>
+      <p>Известная компания, делает блокировщик рекламы. Бесплатного объёма с запасом хватит на переписку.</p>
+      <a class="store" href="https://play.google.com/store/apps/details?id=com.adguard.vpn" target="_blank" rel="noopener">Открыть в Google Play</a>
+      <div class="label">Как включить</div>
+      <ol class="steps">
+        <li>Открой приложение, войди или зарегистрируйся по почте.</li>
+        <li>Нажми большую кнопку включения и открой Телеграм.</li>
+      </ol>
+    </article>
+
+    <article class="option">
+      <div class="option-head"><span class="num">4</span><h3>Psiphon</h3></div>
+      <div class="facts"><span class="chip">бесплатно</span><span class="chip">есть реклама</span><span class="chip">без регистрации</span></div>
+      <p>Бесплатная программа для обхода блокировок, существует много лет. Ничего настраивать не нужно.</p>
+      <a class="store" href="https://play.google.com/store/apps/details?id=com.psiphon3.subscription" target="_blank" rel="noopener">Открыть в Google Play</a>
+      <div class="label">Как включить</div>
+      <ol class="steps">
+        <li>Открой приложение и нажми «Start» (Запустить).</li>
+        <li>Дождись подключения и открой Телеграм.</li>
+      </ol>
+    </article>
+
+    <section class="note warn">
+      <h3>Если Google Play пишет «Недоступно в вашей стране»</h3>
+      <p>Тогда приложение можно скачать файлом с официального сайта — адреса на вкладке «Компьютер», там же есть версия для Android. После скачивания телефон спросит разрешение на установку из этого источника — разреши только для этого раза. Если сомневаешься, лучше позвони мне, сделаем вместе.</p>
+    </section>
+  </div>
+
+  <!-- ===================== IPHONE ===================== -->
+  <div class="panel" id="iphone" role="tabpanel" aria-labelledby="tab-iphone" hidden>
+    <section class="note warn">
+      <h3>На iPhone сложнее</h3>
+      <p>По требованию властей Apple убрала из российского App Store почти все VPN: Proton VPN, AdGuard VPN и AmneziaVPN там не найти. Поэтому на айфоне лучше идти так:</p>
+    </section>
+
+    <article class="option">
+      <div class="option-head"><span class="num">1</span><h3>Прокси из способа 1</h3></div>
+      <div class="facts"><span class="chip">ничего не нужно ставить</span><span class="chip">только для Телеграма</span></div>
+      <p>Для айфона это самый простой путь. Если прокси выше не сработали, попроси у меня свежие — пришлю по SMS или на почту.</p>
+    </article>
+
+    <article class="option">
+      <div class="option-head"><span class="num">2</span><h3>Поищи в App Store сама</h3></div>
+      <p>Иногда что-то остаётся. Открой App Store, нажми «Поиск» и по очереди введи: <b>Proton VPN</b>, <b>AdGuard VPN</b>, <b>Psiphon</b>. Ставь только если разработчик совпадает: Proton AG, AdGuard Software, Psiphon Inc. Если нашлось — как включить, написано на вкладке «Android», там всё так же.</p>
+      <p class="small">Если какой-то из этих VPN у тебя уже когда-то стоял, его можно вернуть: «Настройки» → «Основные» → «Хранилище iPhone» → выбери приложение → «Сгрузить приложение» → «Переустановить».</p>
+    </article>
+
+    <article class="option">
+      <div class="option-head"><span class="num">3</span><h3>Через компьютер</h3></div>
+      <p>Если есть компьютер, проще поставить VPN на него и написать в поддержку оттуда. Смотри вкладку «Компьютер».</p>
+    </article>
+
+    <p class="small">Есть ещё способ со сменой страны в Apple ID, но он долгий и с подвохами. Его лучше делать вместе со мной по телефону.</p>
+  </div>
+
+  <!-- ===================== КОМПЬЮТЕР ===================== -->
+  <div class="panel" id="computer" role="tabpanel" aria-labelledby="tab-computer" hidden>
+    <p>На компьютере (Windows или Mac) приложения скачиваются с официальных сайтов. Скопируй адрес, вставь в браузер, найди кнопку «Скачать» (Download). Когда VPN подключится, открой Телеграм на компьютере или сайт <b>web.telegram.org</b> — туда можно войти по коду, который придёт в Телеграм на телефоне.</p>
+
+    <article class="option">
+      <div class="option-head"><span class="num">1</span><h3>Proton VPN</h3></div>
+      <div class="facts"><span class="chip">бесплатно</span><span class="chip">без лимита</span></div>
+      <div class="copyrow"><code>protonvpn.com/download</code><button class="copy" type="button" data-copy="https://protonvpn.com/download">Скопировать</button></div>
+      <p class="small">Зарегистрируйся по почте, выбери Free, в настройках включи протокол Stealth и нажми «Подключиться».</p>
+    </article>
+
+    <article class="option">
+      <div class="option-head"><span class="num">2</span><h3>AmneziaVPN</h3></div>
+      <div class="facts"><span class="chip">бесплатно</span><span class="chip">сделан для России</span></div>
+      <div class="copyrow"><code>amnezia.org</code><button class="copy" type="button" data-copy="https://amnezia.org">Скопировать</button></div>
+      <p class="small">Если сайт не открывается, есть зеркало:</p>
+      <div class="copyrow"><code>storage.googleapis.com/amnezia/amnezia.org</code><button class="copy" type="button" data-copy="https://storage.googleapis.com/amnezia/amnezia.org">Скопировать</button></div>
+      <p class="small">В приложении: «➕» → «VPN от Amnezia» → «Amnezia Free RU» → «Подключиться».</p>
+    </article>
+
+    <article class="option">
+      <div class="option-head"><span class="num">3</span><h3>AdGuard VPN</h3></div>
+      <div class="facts"><span class="chip">бесплатно</span><span class="chip">около 3 ГБ в месяц</span></div>
+      <div class="copyrow"><code>adguard-vpn.com</code><button class="copy" type="button" data-copy="https://adguard-vpn.com">Скопировать</button></div>
+      <p class="small">Войди по почте и нажми кнопку включения.</p>
+    </article>
+
+    <article class="option">
+      <div class="option-head"><span class="num">4</span><h3>Psiphon</h3></div>
+      <div class="facts"><span class="chip">бесплатно</span><span class="chip">без регистрации</span></div>
+      <div class="copyrow"><code>psiphon.ca</code><button class="copy" type="button" data-copy="https://psiphon.ca">Скопировать</button></div>
+      <p class="small">Скачай, запусти, он подключится сам.</p>
+    </article>
+  </div>
+
+  <section class="note warn">
+    <h2>Что не ставить</h2>
+    <ul>
+      <li>Неизвестные приложения с названиями вроде «Free VPN Unlimited», даже с высоким рейтингом.</li>
+      <li>VPN из рекламы и из рассылок.</li>
+      <li>Ключи и «VPN за 100 рублей» от ботов в Телеграме.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Если на телефоне почти ничего не открывается</h2>
+    <p>Иногда операторы отключают мобильный интернет, и работают только Госуслуги, Яндекс и банки. Тогда VPN и прокси через мобильный интернет обычно не помогают. Подключись к домашнему Wi‑Fi и попробуй снова.</p>
+  </section>
+
+  <section>
+    <h2>Что написать в поддержку</h2>
+    <p>Когда Телеграм заработает, найди чат поддержки своего VPN и отправь, вписав свою почту:</p>
+    <div class="template" id="support-text">Здравствуйте! У меня перестал работать VPN, не подключается. Аккаунт оформлен на почту: ________. Подскажите, пожалуйста, что сделать?</div>
+    <div><button class="copy" type="button" data-copy-from="support-text">Скопировать текст</button></div>
+  </section>
+
+  <section>
+    <p class="small">Пользоваться VPN в России не запрещено. Собрано 13 ноября 2026 года. Что работает, а что нет, меняется почти каждую неделю.</p>
+    <details>
+      <summary>Откуда эти сведения</summary>
+      <ul>
+        <li><a href="https://russiable.com/vpn-russia/" target="_blank" rel="noopener">Опрос читателей Russiable о VPN в России, октябрь 2026</a></li>
+        <li><a href="https://status-vpn.github.io/" target="_blank" rel="noopener">Страница статусов VPN-сервисов</a></li>
+        <li><a href="https://docs.amnezia.org/documentation/instructions/installing-amneziavpn-on-ios/" target="_blank" rel="noopener">Amnezia: установка на iPhone в России</a></li>
+        <li><a href="https://docs.amnezia.org/ru/documentation/instructions/connect-amfree" target="_blank" rel="noopener">Amnezia: как подключить бесплатную версию</a></li>
+        <li><a href="https://habr.com/ru/news/827810/" target="_blank" rel="noopener">Хабр: Apple удалила VPN из российского App Store</a></li>
+        <li><a href="https://www.techradar.com/vpn/vpn-services/adguards-open-source-vpn-client-removed-from-russias-apple-app-store" target="_blank" rel="noopener">TechRadar: удаления VPN из App Store в 2026</a></li>
+      </ul>
+    </details>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  var ids = ["android", "iphone", "computer"];
+  function show(id) {
+    if (ids.indexOf(id) === -1) id = "android";
+    tabs.forEach(function (t) {
+      var on = t.getAttribute("aria-controls") === id;
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    });
+  }
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () {
+      var id = t.getAttribute("aria-controls");
+      show(id);
+      try { history.replaceState(null, "", "#" + id); } catch (e) {}
+    });
+  });
+  show((location.hash || "").replace("#", ""));
+  window.addEventListener("hashchange", function () { show((location.hash || "").replace("#", "")); });
+})();
+
+document.querySelectorAll("button.copy").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    var text = btn.dataset.copy;
+    var srcEl = null;
+    if (!text && btn.dataset.copyFrom) {
+      srcEl = document.getElementById(btn.dataset.copyFrom);
+      text = srcEl ? srcEl.textContent : "";
+    }
+    var original = btn.textContent;
+    function done(msg) {
+      btn.textContent = msg;
+      setTimeout(function () { btn.textContent = original; }, 1800);
+    }
+    function fallback() {
+      var target = srcEl || btn.parentElement.querySelector("code");
+      if (target) {
+        var range = document.createRange();
+        range.selectNodeContents(target);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      done("Выделено, нажми «Копировать»");
+    }
+    try {
+      navigator.clipboard.writeText(text).then(function () { done("Скопировано"); }, fallback);
+    } catch (e) { fallback(); }
+  });
+});
+</script>
+
+</body>
+</html>
